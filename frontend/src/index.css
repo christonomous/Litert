@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-brand-primary: #6366f1;
+  --color-brand-secondary: #a855f7;
+  --color-brand-accent: #f43f5e;
+  
+  --color-glass-white: rgba(255, 255, 255, 0.08);
+  --color-glass-dark: rgba(15, 23, 42, 0.6);
+  
+  --radius-4xl: 32px;
+  --radius-5xl: 40px;
+}
+
+@layer base {
+  :root {
+    --bg-mesh: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+               radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+               radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+  }
+
+  .light {
+    --bg-mesh: radial-gradient(at 0% 0%, hsla(253,100%,95%,1) 0, transparent 50%), 
+               radial-gradient(at 50% 0%, hsla(225,100%,90%,1) 0, transparent 50%), 
+               radial-gradient(at 100% 0%, hsla(339,100%,90%,1) 0, transparent 50%);
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+  }
+
+  body {
+    @apply min-h-screen font-sans antialiased overflow-hidden;
+    background-color: #020617;
+    background-image: var(--bg-mesh);
+    color: var(--text-primary);
+  }
+}
+
+@layer components {
+  .glass {
+    @apply backdrop-blur-3xl border border-white/10 shadow-2xl;
+    background: rgba(15, 23, 42, 0.4);
+  }
+
+  .light .glass {
+    @apply border-black/5 shadow-xl;
+    background: rgba(255, 255, 255, 0.6);
+  }
+
+  .btn-primary {
+    @apply relative overflow-hidden px-6 py-3 rounded-2xl font-semibold transition-all duration-300
+           bg-gradient-to-r from-brand-primary to-brand-secondary text-white
+           hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:-translate-y-0.5 active:scale-95
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .input-field {
+    @apply w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none
+           transition-all duration-300 focus:border-brand-primary/50 focus:bg-white/10
+           placeholder:text-slate-500;
+  }
+
+  .light .input-field {
+    @apply bg-black/5 border-black/10 focus:bg-black/10;
+  }
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  @apply bg-black/10 hover:bg-black/20;
+}
