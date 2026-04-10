@@ -3,7 +3,7 @@ import { Settings, Menu, X } from 'lucide-react';
 
 export function Header({ isOpen, setIsOpen }) {
   return (
-    <header className="flex h-20 items-center justify-between px-4 lg:px-8 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
+    <header className="flex shrink-0 h-20 items-center justify-between px-4 lg:px-8 border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
       <div className="flex items-center gap-4">
         <button 
           onClick={() => setIsOpen(!isOpen)}

@@ -6,7 +6,7 @@ import { SetupView } from './components/SetupView';
 import { ChatView } from './components/ChatView';
 import { ChatInput } from './components/ChatInput';
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = `http://${window.location.hostname}:8000`;
 
 function App() {
   const [status, setStatus] = useState({ progress: 0, status: 'idle', error: null });
@@ -137,7 +137,7 @@ function App() {
   };
 
   const sendChat = async (directPrompt = null) => {
-    const textToSubmit = directPrompt || prompt;
+    const textToSubmit = typeof directPrompt === 'string' ? directPrompt : prompt;
     if (!textToSubmit.trim()) return;
 
     let currentId = activeId;
@@ -274,7 +274,7 @@ function App() {
   const isReady = status.status === 'complete';
 
   return (
-    <div className="flex h-screen w-full overflow-hidden text-slate-200">
+    <div className="flex h-[100dvh] w-full overflow-hidden text-slate-200">
       <Sidebar 
         isOpen={isMobileMenuOpen} 
         setIsOpen={setIsMobileMenuOpen}
@@ -295,7 +295,7 @@ function App() {
           setIsOpen={setIsMobileMenuOpen} 
         />
 
-        <div className="flex-1 overflow-y-auto p-8 relative">
+        <div className="flex-1 min-h-0 overflow-y-auto p-8 relative">
           <AnimatePresence mode="wait">
             {!isReady ? (
               <SetupView status={status} triggerDownload={triggerDownload} />
