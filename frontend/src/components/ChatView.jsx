@@ -89,7 +89,7 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick, theme
               <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
               <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
             </div>
-            <span className="text-xs font-semibold text-brand-primary/80 uppercase tracking-widest">Thinking</span>
+            <span className="text-xs font-semibold text-brand-primary/80 uppercase tracking-widest">{typeof isLoading === 'string' ? isLoading : 'THINKING'}</span>
           </div>
         </motion.div>
       )}

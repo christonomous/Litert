@@ -168,7 +168,7 @@ function App() {
     ));
 
     setPrompt("");
-    setIsLoading(true);
+    setIsLoading("THINKING");
 
     try {
       const response = await fetch(`${API_BASE}/chat`, {

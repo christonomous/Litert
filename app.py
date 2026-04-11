@@ -135,6 +135,35 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[Message]
 
+
+def fetch_website(url):
+    import requests
+    import urllib3
+    from bs4 import BeautifulSoup
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=10, verify=False)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        for tag in soup(['script', 'style', 'header', 'footer', 'nav', 'noscript']):
+            tag.decompose()
+            
+        for a in soup.find_all('a', href=True):
+            if a.text.strip() and not a['href'].startswith('javascript:'):
+                href = a['href']
+                if href.startswith('/'):
+                    from urllib.parse import urljoin
+                    href = urljoin(url, href)
+                a.replace_with(f"[{a.text.strip()}]({href})")
+                
+        text = soup.get_text(separator=' ')
+        import re
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()[:4000]
+    except Exception as e:
+        return f"Error fetching website: {e}"
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     global engine
@@ -150,58 +179,80 @@ async def chat(request: ChatRequest):
         except Exception as e:
             logger.error(f"Failed to load engine: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to load model: {str(e)}")
-    
-    search_context = ""
-    if request.messages:
-        last_user_msg = next((m for m in reversed(request.messages) if m.role == "user"), None)
-        if last_user_msg:
-            # 1. Intent Check
-            intent_prompt = f"<start_of_turn>user\nAnalyze this message: '{last_user_msg.content}'\nIf the user is asking for information that requires a web search (like news, facts, current events, or a specific topic research), extract ONLY the essential search keywords to use in a search engine. Do NOT include conversational words or phrases like 'search the web' or 'research'. Output ONLY the clean keywords. If no search is needed, reply EXACTLY 'NO_SEARCH'.<end_of_turn>\n<start_of_turn>model\n"
-            search_query = ""
-            try:
-                with engine.create_conversation() as conv:
-                    for chunk in conv.send_message_async(intent_prompt):
-                        if 'content' in chunk and chunk['content']:
-                            search_query += chunk['content'][0].get('text', '')
-            except Exception as e:
-                logger.error(f"Intent check failed: {e}")
-            
-            search_query = search_query.strip()
-            
-            # 2. Execute Search if intended
-            if search_query and "NO_SEARCH" not in search_query.upper():
-                try:
-                    logger.info(f"AI decided to search the web for: {search_query}")
-                    from ddgs import DDGS
-                    with DDGS() as ddgs:
-                        results = list(ddgs.text(search_query, max_results=5))
-                        if results:
-                            # Load dynamic system prompt for search behavior
-                            system_prompt_content = "[SYSTEM: Real-time Web Search Results Provided]\n"
-                            try:
-                                if os.path.exists("system_prompt.md"):
-                                    with open("system_prompt.md", "r") as f:
-                                        system_prompt_content = f.read().strip() + "\n\n[SEARCH RESULTS]\n"
-                            except Exception as e:
-                                logger.error(f"Could not read system_prompt.md: {e}")
-                            
-                            search_context = system_prompt_content
-                            for idx, res in enumerate(results):
-                                search_context += f"Source {idx+1}: [{res.get('title')}]({res.get('href')}) - {res.get('body')}\n"
-                            logger.info("Search context attached successfully.")
-                        else:
-                            logger.info("DuckDuckGo returned 0 results.")
-                except Exception as e:
-                    logger.error(f"Web search failed: {e}")
 
     async def generate():
         try:
+            agent_context = ""
+            action_count = 0
+            
+            while action_count < 3:
+                last_user_msg = next((m for m in reversed(request.messages) if m.role == "user"), None)
+                if not last_user_msg:
+                    break
+                    
+                agent_prompt = f"<start_of_turn>user\nAnalyze this conversation and the data collected so far. Do you have enough info to answer the user's final request? If yes, reply EXACTLY 'DONE'. If you need to search the web, reply 'SEARCH: <keyword>'. If you need to read a specific website, reply 'VISIT: <url>'.\n\nCollected Data:\n{agent_context}\n\nLast user message: '{last_user_msg.content}'<end_of_turn>\n<start_of_turn>model\n"
+                
+                action = ""
+                with engine.create_conversation() as conv:
+                    for chunk in conv.send_message_async(agent_prompt):
+                        if 'content' in chunk and chunk['content']:
+                            action += chunk['content'][0].get('text', '')
+                
+                action = action.strip()
+                if "DONE" in action.upper() or ("SEARCH:" not in action and "VISIT:" not in action):
+                    break
+                    
+                if "SEARCH:" in action:
+                    query = action.split("SEARCH:")[1].split('\n')[0].strip()
+                    logger.info(f"Agent Action Loop: SEARCH -> {query}")
+                    import json
+                    msg_data = json.dumps({'status': f'SEARCH [{query}]'})
+                    yield f"data: {msg_data}\n\n"
+                    
+                    try:
+                        from ddgs import DDGS
+                        with DDGS() as ddgs:
+                            results = list(ddgs.text(query, max_results=5))
+                            search_res = f"Search Results for '{query}':\n"
+                            if results:
+                                for idx, res in enumerate(results):
+                                    search_res += f"Source {idx+1}: [{res.get('title')}]({res.get('href')}) - {res.get('body')}\n"
+                            else:
+                                search_res += "No results found.\n"
+                            agent_context += search_res + "\n"
+                    except Exception as e:
+                        agent_context += f"Search error: {e}\n"
+                
+                elif "VISIT:" in action:
+                    url = action.split("VISIT:")[1].split('\n')[0].strip()
+                    logger.info(f"Agent Action Loop: VISIT -> {url}")
+                    import json
+                    msg_data = json.dumps({'status': f'VISIT [{url}]'})
+                    yield f"data: {msg_data}\n\n"
+                    
+                    website_content = fetch_website(url)
+                    agent_context += f"Website Content for '{url}':\n{website_content}\n\n"
+                
+                action_count += 1
+
+            system_prompt_content = "[SYSTEM: ReAct Agent Enabled]\n"
+            import os
+            try:
+                if os.path.exists("system_prompt.md"):
+                    with open("system_prompt.md", "r") as f:
+                        system_prompt_content = f.read().strip() + "\n"
+            except Exception as e:
+                pass
+                
+            if agent_context:
+                system_prompt_content += "\n[COLLECTED RESEARCH DATA]\n" + agent_context
+
             formatted_prompt = ""
             for i, msg in enumerate(request.messages):
                 role = "user" if msg.role == "user" else "model"
                 content = msg.content
-                if msg.role == "user" and i == len(request.messages) - 1 and search_context:
-                    content = f"{search_context}\n\nUSER REQUEST: {content}"
+                if msg.role == "user" and i == len(request.messages) - 1:
+                    content = f"{system_prompt_content}\n\nUSER REQUEST: {content}"
                 formatted_prompt += f"<start_of_turn>{role}\n{content}<end_of_turn>\n"
             
             if not formatted_prompt.endswith("<start_of_turn>model\n"):
@@ -209,6 +260,7 @@ async def chat(request: ChatRequest):
 
             with engine.create_conversation() as conv:
                 logger.info("Starting inference with conversation history")
+                import json
                 for chunk in conv.send_message_async(formatted_prompt):
                     if 'content' in chunk and len(chunk['content']) > 0:
                         text = chunk['content'][0].get('text', '')
@@ -217,6 +269,7 @@ async def chat(request: ChatRequest):
                 logger.info("Inference complete.")
         except Exception as e:
             logger.error(f"Inference error: {e}")
+            import json
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
