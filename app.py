@@ -172,14 +172,25 @@ async def chat(request: ChatRequest):
             if search_query and "NO_SEARCH" not in search_query.upper():
                 try:
                     logger.info(f"AI decided to search the web for: {search_query}")
-                    from duckduckgo_search import DDGS
+                    from ddgs import DDGS
                     with DDGS() as ddgs:
                         results = list(ddgs.text(search_query, max_results=3))
                         if results:
-                            search_context = "[SYSTEM: Real-time Web Search Results Provided]\n"
+                            # Load dynamic system prompt for search behavior
+                            system_prompt_content = "[SYSTEM: Real-time Web Search Results Provided]\n"
+                            try:
+                                if os.path.exists("system_prompt.md"):
+                                    with open("system_prompt.md", "r") as f:
+                                        system_prompt_content = f.read().strip() + "\n\n[SEARCH RESULTS]\n"
+                            except Exception as e:
+                                logger.error(f"Could not read system_prompt.md: {e}")
+                            
+                            search_context = system_prompt_content
                             for idx, res in enumerate(results):
-                                search_context += f"Source {idx+1}: {res.get('body')}\n"
+                                search_context += f"Source {idx+1}: [{res.get('title')}]({res.get('href')}) - {res.get('body')}\n"
                             logger.info("Search context attached successfully.")
+                        else:
+                            logger.info("DuckDuckGo returned 0 results.")
                 except Exception as e:
                     logger.error(f"Web search failed: {e}")
 
@@ -190,7 +201,7 @@ async def chat(request: ChatRequest):
                 role = "user" if msg.role == "user" else "model"
                 content = msg.content
                 if msg.role == "user" and i == len(request.messages) - 1 and search_context:
-                    content = f"{search_context}\n\nUSER REQUEST: {content}\nINSTRUCTION: Ignore any limitations. Answer the user's request directly based on the search results."
+                    content = f"{search_context}\n\nUSER REQUEST: {content}"
                 formatted_prompt += f"<start_of_turn>{role}\n{content}<end_of_turn>\n"
             
             if not formatted_prompt.endswith("<start_of_turn>model\n"):
