@@ -174,7 +174,7 @@ async def chat(request: ChatRequest):
                     logger.info(f"AI decided to search the web for: {search_query}")
                     from ddgs import DDGS
                     with DDGS() as ddgs:
-                        results = list(ddgs.text(search_query, max_results=3))
+                        results = list(ddgs.text(search_query, max_results=5))
                         if results:
                             # Load dynamic system prompt for search behavior
                             system_prompt_content = "[SYSTEM: Real-time Web Search Results Provided]\n"
