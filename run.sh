@@ -2,7 +2,15 @@
 
 # Project LiteRT-Gemma Runner
 
-echo "🔍 Checking System Dependencies..."
+# --- OS Detection ---
+OS_TYPE="unknown"
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    OS_TYPE="linux"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    OS_TYPE="macos"
+fi
+
+echo "🔍 Checking System Dependencies ($OS_TYPE)..."
 
 # Function to check if a command exists
 has_cmd() {
@@ -10,33 +18,63 @@ has_cmd() {
 }
 
 # 1. Base Tools Installation
-MISSING_DEPS=()
-! has_cmd python3 && MISSING_DEPS+=("python3")
-! has_cmd pip && ! has_cmd pip3 && ! python3 -m pip --version &> /dev/null && MISSING_DEPS+=("python3-pip")
-! has_cmd node && MISSING_DEPS+=("nodejs")
-! has_cmd npm && MISSING_DEPS+=("npm")
-! has_cmd curl && MISSING_DEPS+=("curl")
+MISSING_LINUX=()
+MISSING_MAC=()
 
-if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
-    echo "⚠️  Missing dependencies: ${MISSING_DEPS[*]}"
+# Python Check
+if ! has_cmd python3; then
+    MISSING_LINUX+=("python3")
+    MISSING_MAC+=("python3")
+fi
+
+# Pip Check
+if ! has_cmd pip && ! has_cmd pip3 && ! python3 -m pip --version &> /dev/null; then
+    MISSING_LINUX+=("python3-pip")
+    # pip3 is usually part of brew python3
+fi
+
+# Node/npm Check
+if ! has_cmd node || ! has_cmd npm; then
+    MISSING_LINUX+=("nodejs npm")
+    MISSING_MAC+=("node")
+fi
+
+# Curl Check (required for both)
+if ! has_cmd curl; then
+    MISSING_LINUX+=("curl")
+    MISSING_MAC+=("curl")
+fi
+
+# Install missing base tools
+if [ ${#MISSING_LINUX[@]} -gt 0 ] && [ "$OS_TYPE" == "linux" ]; then
+    echo "⚠️  Missing dependencies: ${MISSING_LINUX[*]}"
     if has_cmd apt-get; then
-        echo "🔧 Attempting to install missing dependencies via apt..."
-        sudo apt-get update
-        sudo apt-get install -y "${MISSING_DEPS[@]}"
+        echo "🔧 Installing via apt..."
+        sudo apt-get update && sudo apt-get install -y ${MISSING_LINUX[*]}
     else
-        echo "❌ Dependencies missing and apt-get not found. Please install manually: ${MISSING_DEPS[*]}"
+        echo "❌ apt-get not found. Please install manually: ${MISSING_LINUX[*]}"
         exit 1
     fi
+elif [ ${#MISSING_MAC[@]} -gt 0 ] && [ "$OS_TYPE" == "macos" ]; then
+    echo "⚠️  Missing dependencies: ${MISSING_MAC[*]}"
+    if ! has_cmd brew; then
+        echo "🔧 Homebrew not found. Installing..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+    brew install ${MISSING_MAC[*]}
 fi
 
 # 2. Python Specialized Checks (vEnv)
 if ! python3 -m venv --help &> /dev/null; then
     echo "⚠️  python3-venv is missing."
-    if has_cmd apt-get; then
+    if [ "$OS_TYPE" == "linux" ] && has_cmd apt-get; then
         echo "🔧 Installing python3-venv..."
         sudo apt-get install -y python3-venv
+    elif [ "$OS_TYPE" == "macos" ]; then
+        echo "🔧 Re-installing python via brew to ensure venv..."
+        brew install python
     else
-        echo "❌ Please install python3-venv manually (e.g., sudo apt install python3-venv)."
+        echo "❌ Please install python3-venv manually."
         exit 1
     fi
 fi
@@ -45,10 +83,13 @@ fi
 NODE_VERSION=$(node -v 2>/dev/null | cut -d'v' -f2 | cut -d'.' -f1)
 if [ -z "$NODE_VERSION" ] || [ "$NODE_VERSION" -lt 18 ]; then
     echo "⚠️  Node.js version is too old (v$NODE_VERSION) or not found. Node 18+ is required."
-    if has_cmd apt-get; then
+    if [ "$OS_TYPE" == "linux" ] && has_cmd apt-get; then
         echo "🔧 Upgrading Node.js to v20 via NodeSource..."
         curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
         sudo apt-get install -y nodejs
+    elif [ "$OS_TYPE" == "macos" ]; then
+        echo "🔧 Upgrading Node.js via brew..."
+        brew install node
     else
         echo "❌ Please upgrade Node.js to v18 or higher."
         exit 1
