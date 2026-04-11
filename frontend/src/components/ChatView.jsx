@@ -57,7 +57,12 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick, theme
               {msg.role === 'assistant' ? (
                 <div className={cn("prose max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-xl", theme === 'dark' && "prose-invert")}>
                   {msg.content ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                      }}
+                    >
                       {msg.content}
                     </ReactMarkdown>
                   ) : (
