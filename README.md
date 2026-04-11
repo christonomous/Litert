@@ -56,6 +56,8 @@ graph TD
 
 ---
 
+## 🚀 Quick Start
+
 ### 1. Get the Code
 Clone the repository or download the source as a ZIP file:
 
