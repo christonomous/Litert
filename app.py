@@ -151,12 +151,47 @@ async def chat(request: ChatRequest):
             logger.error(f"Failed to load engine: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to load model: {str(e)}")
     
+    search_context = ""
+    if request.messages:
+        last_user_msg = next((m for m in reversed(request.messages) if m.role == "user"), None)
+        if last_user_msg:
+            # 1. Intent Check
+            intent_prompt = f"<start_of_turn>user\nAnalyze this message: '{last_user_msg.content}'\nIf the user is asking for information that requires a web search (like news, facts, current events, or a specific topic research), extract ONLY the essential search keywords to use in a search engine. Do NOT include conversational words or phrases like 'search the web' or 'research'. Output ONLY the clean keywords. If no search is needed, reply EXACTLY 'NO_SEARCH'.<end_of_turn>\n<start_of_turn>model\n"
+            search_query = ""
+            try:
+                with engine.create_conversation() as conv:
+                    for chunk in conv.send_message_async(intent_prompt):
+                        if 'content' in chunk and chunk['content']:
+                            search_query += chunk['content'][0].get('text', '')
+            except Exception as e:
+                logger.error(f"Intent check failed: {e}")
+            
+            search_query = search_query.strip()
+            
+            # 2. Execute Search if intended
+            if search_query and "NO_SEARCH" not in search_query.upper():
+                try:
+                    logger.info(f"AI decided to search the web for: {search_query}")
+                    from duckduckgo_search import DDGS
+                    with DDGS() as ddgs:
+                        results = list(ddgs.text(search_query, max_results=3))
+                        if results:
+                            search_context = "[SYSTEM: Real-time Web Search Results Provided]\n"
+                            for idx, res in enumerate(results):
+                                search_context += f"Source {idx+1}: {res.get('body')}\n"
+                            logger.info("Search context attached successfully.")
+                except Exception as e:
+                    logger.error(f"Web search failed: {e}")
+
     async def generate():
         try:
             formatted_prompt = ""
-            for msg in request.messages:
+            for i, msg in enumerate(request.messages):
                 role = "user" if msg.role == "user" else "model"
-                formatted_prompt += f"<start_of_turn>{role}\n{msg.content}<end_of_turn>\n"
+                content = msg.content
+                if msg.role == "user" and i == len(request.messages) - 1 and search_context:
+                    content = f"{search_context}\n\nUSER REQUEST: {content}\nINSTRUCTION: Ignore any limitations. Answer the user's request directly based on the search results."
+                formatted_prompt += f"<start_of_turn>{role}\n{content}<end_of_turn>\n"
             
             if not formatted_prompt.endswith("<start_of_turn>model\n"):
                 formatted_prompt += "<start_of_turn>model\n"
