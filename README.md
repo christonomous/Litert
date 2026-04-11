@@ -1,4 +1,4 @@
-# 🌌 NujinLocal: Autonomous Research Agent [nujin.ai](https://nujin.ai)
+# 🌌 NujinLocal: Local Autonomous Web-Intelligence
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
@@ -6,7 +6,7 @@
 [![Tailwind 4](https://img.shields.io/badge/Styling-Tailwind_4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**NujinLocal** is a high-performance, privacy-first autonomous research framework powered by **Nujinai**—an elite AI agent optimized for real-time web intelligence and deep synthesis. Built on Google's **LiteRT** (formerly TFLite) for edge-optimized execution of the **Gemma 4 E2B-it** model. Part of the [Nujin.ai](https://nujin.ai) ecosystem.
+**NujinLocal** is an autonomous AI agent designed to bring high-performance web-intelligence to any **standard office laptop or PC**. It empowers users with smart tools to search, visit, and synthesize real-time web data locally and privately. Powered by **Nujinai**, it is built on Google's **LiteRT** (formerly TFLite) for edge-optimized execution of the **Gemma 4 E2B-it** model. Part of the [Nujin.ai](https://nujin.ai) ecosystem.
 
 > [!IMPORTANT]
 > This project is an essential component for a larger initiative: building an **AI OS for Smart Sovereignty**. As a **NujinLocal** instance, it serves as the core real-time intelligence layer, ensuring privacy and local execution at every level.
@@ -56,10 +56,20 @@ graph TD
 
 ---
 
-## 🚀 Quick Start
+### 1. Get the Code
+Clone the repository or download the source as a ZIP file:
 
-### The "One-Command" Setup
-NujinLocal is designed for zero friction. On Linux or macOS, simply run:
+**Option A: Git Clone (Recommended)**
+```bash
+git clone https://github.com/christonomous/NujinLocal.git
+cd NujinLocal
+```
+
+**Option B: Download ZIP**
+Click here to [Download ZIP](https://github.com/christonomous/NujinLocal/archive/refs/heads/main.zip)
+
+### 2. The "One-Command" Setup
+NujinLocal is designed for zero friction. On Linux (Ubuntu) or macOS, simply run:
 
 ```bash
 chmod +x run.sh
