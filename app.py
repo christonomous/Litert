@@ -160,7 +160,7 @@ def fetch_website(url):
         text = soup.get_text(separator=' ')
         import re
         text = re.sub(r'\s+', ' ', text)
-        return text.strip()[:4000]
+        return text.strip()[:8000]
     except Exception as e:
         return f"Error fetching website: {e}"
 
@@ -185,12 +185,12 @@ async def chat(request: ChatRequest):
             agent_context = ""
             action_count = 0
             
-            while action_count < 3:
+            while action_count < 5:
                 last_user_msg = next((m for m in reversed(request.messages) if m.role == "user"), None)
                 if not last_user_msg:
                     break
                     
-                agent_prompt = f"<start_of_turn>user\nAnalyze this conversation and the data collected so far. Do you have enough info to answer the user's final request? If yes, reply EXACTLY 'DONE'. If you need to search the web, reply 'SEARCH: <keyword>'. If you need to read a specific website, reply 'VISIT: <url>'.\n\nCollected Data:\n{agent_context}\n\nLast user message: '{last_user_msg.content}'<end_of_turn>\n<start_of_turn>model\n"
+                agent_prompt = f"<start_of_turn>user\nYou are the Action Coordinator. Your goal: '{last_user_msg.content}'\n\nReview the Collected Data. \n- If the user wants a summary of a specific item or news story, and you only have a list of links or titles, you are NOT DONE. You MUST VISIT the specific URL for that story now.\n- If you need to verify a fact, SEARCH for it.\n- ONLY if you have the full, detailed content of requested stories ready to summarize, reply 'DONE'.\n\nOutput only: 'SEARCH: <query>', 'VISIT: <url>', or 'DONE'.\n\nCollected Data:\n{agent_context}<end_of_turn>\n<start_of_turn>model\n"
                 
                 action = ""
                 with engine.create_conversation() as conv:
@@ -199,7 +199,10 @@ async def chat(request: ChatRequest):
                             action += chunk['content'][0].get('text', '')
                 
                 action = action.strip()
-                if "DONE" in action.upper() or ("SEARCH:" not in action and "VISIT:" not in action):
+                if "DONE" in action.upper():
+                    break
+                if "SEARCH:" not in action and "VISIT:" not in action:
+                    # If it's something else, it might be the AI starting to answer too early
                     break
                     
                 if "SEARCH:" in action:
