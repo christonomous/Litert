@@ -40,7 +40,7 @@ export function Sidebar({
             <Cpu className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-text-primary">
-            Litert <span className="text-brand-primary">AI</span>
+            NujinLocal <span className="text-brand-primary">AI</span>
           </h1>
         </div>
         

@@ -30,7 +30,7 @@ log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(), log_handler])
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Gemma LiteRT Backend")
+app = FastAPI(title="NujinLocal Backend")
 
 # Enable CORS for frontend development
 app.add_middleware(

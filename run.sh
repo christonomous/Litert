@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Project LiteRT-Gemma Runner
+# Project NujinLocal Runner
 
 # --- OS Detection ---
 OS_TYPE="unknown"

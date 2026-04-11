@@ -11,11 +11,11 @@ const API_BASE = `http://${window.location.hostname}:8000`;
 function App() {
   const [status, setStatus] = useState({ progress: 0, status: 'idle', error: null });
   const [conversations, setConversations] = useState(() => {
-    const saved = localStorage.getItem('litert_conversations');
+    const saved = localStorage.getItem('nujin_conversations');
     return saved ? JSON.parse(saved) : [];
   });
   const [activeId, setActiveId] = useState(() => {
-    return localStorage.getItem('litert_active_id');
+    return localStorage.getItem('nujin_active_id');
   });
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,12 +28,12 @@ function App() {
 
   // Persistence
   useEffect(() => {
-    localStorage.setItem('litert_conversations', JSON.stringify(conversations));
+    localStorage.setItem('nujin_conversations', JSON.stringify(conversations));
   }, [conversations]);
 
   useEffect(() => {
     if (activeId) {
-      localStorage.setItem('litert_active_id', activeId);
+      localStorage.setItem('nujin_active_id', activeId);
     }
   }, [activeId]);
 
