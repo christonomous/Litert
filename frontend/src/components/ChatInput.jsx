@@ -10,15 +10,15 @@ export function ChatInput({ prompt, setPrompt, sendChat, isLoading }) {
   };
 
   return (
-    <div className="lg:absolute lg:bottom-10 left-0 right-0 px-4 lg:px-8 py-4 bg-slate-900/50 lg:bg-transparent backdrop-blur-lg lg:backdrop-blur-none border-t border-white/5 lg:border-none">
-      <div className="mx-auto max-w-4xl relative">
+    <div className="absolute bottom-0 lg:bottom-10 left-0 right-0 px-4 lg:px-8 py-4 pb-8 lg:pb-4 z-10 pointer-events-none">
+      <div className="mx-auto max-w-4xl relative pointer-events-auto">
         <div className="glass rounded-3xl lg:rounded-[32px] p-1.5 lg:p-2 flex items-center ring-1 ring-white/10 shadow-2xl focus-within:ring-brand-primary/50 transition-all duration-500">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask anything..."
-            className="flex-1 bg-transparent border-none outline-none px-4 lg:px-6 py-3 lg:py-4 text-white placeholder:text-slate-500 resize-none max-h-40"
+            className="flex-1 bg-transparent border-none outline-none px-4 lg:px-6 py-3 lg:py-4 text-text-primary placeholder:text-text-secondary resize-none max-h-40"
             rows={1}
           />
           <button
