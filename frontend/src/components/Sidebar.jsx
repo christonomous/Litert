@@ -39,7 +39,7 @@ export function Sidebar({
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary shadow-lg shadow-brand-primary/20">
             <Cpu className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-text-primary">
             Litert <span className="text-brand-primary">AI</span>
           </h1>
         </div>
@@ -55,7 +55,7 @@ export function Sidebar({
       <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
         <button 
           onClick={createNewConversation}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-brand-primary/30 transition-all group mb-8"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl sidebar-btn text-text-primary transition-all group mb-8"
         >
           <div className="h-8 w-8 rounded-xl bg-brand-primary/20 flex items-center justify-center text-brand-primary group-hover:scale-110 transition-transform">
             <Plus className="h-5 w-5" />
@@ -64,7 +64,7 @@ export function Sidebar({
         </button>
 
         <div className="space-y-6">
-          <div className="flex items-center gap-2 px-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <div className="flex items-center gap-2 px-2 text-[10px] font-bold text-text-secondary uppercase tracking-widest">
             <History className="h-3 w-3" />
             Recent History
           </div>
@@ -72,7 +72,7 @@ export function Sidebar({
           <div className="space-y-1">
             {conversations.length === 0 ? (
               <div className="px-4 py-8 text-center bg-white/[0.02] rounded-2xl border border-dashed border-white/5">
-                <p className="text-xs text-slate-500">No conversations yet</p>
+                <p className="text-xs text-text-secondary">No conversations yet</p>
               </div>
             ) : (
               conversations.map((chat) => (

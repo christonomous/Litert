@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '../utils/cn';
 
-export function ChatView({ messages, isLoading, chatEndRef, onActionClick }) {
+export function ChatView({ messages, isLoading, chatEndRef, onActionClick, theme }) {
   return (
     <motion.div
       key="chat"
@@ -18,8 +18,8 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick }) {
           <div className="p-4 rounded-full bg-brand-primary/10 mb-6">
             <MessageSquare className="h-8 w-8 text-brand-primary" />
           </div>
-          <h3 className="text-2xl font-bold text-white mb-2">Neural Engine Ready</h3>
-          <p className="text-slate-500 max-w-sm">
+          <h3 className="text-2xl font-bold text-text-primary mb-2">Neural Engine Ready</h3>
+          <p className="text-text-secondary max-w-sm">
             Gemma 4 E2B IT is now running on your hardware. Your conversation is private and local.
           </p>
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg px-4">
@@ -42,18 +42,18 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick }) {
           >
             <div className={cn(
               "h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center shadow-lg",
-              msg.role === 'assistant' ? "bg-brand-primary/20 text-brand-primary border border-brand-primary/30" : "bg-white/10 text-white border border-white/20"
+              msg.role === 'assistant' ? "bg-brand-primary/20 text-brand-primary border border-brand-primary/30" : "user-avatar"
             )}>
               {msg.role === 'assistant' ? <Bot className="h-6 w-6" /> : <User className="h-6 w-6" />}
             </div>
             <div className={cn(
               "max-w-[90%] lg:max-w-[80%] px-4 lg:px-6 py-3 lg:py-4 rounded-3xl text-sm leading-relaxed min-h-[52px]",
               msg.role === 'assistant'
-                ? "glass text-slate-200"
+                ? "glass text-text-primary"
                 : "bg-brand-primary text-white shadow-xl shadow-brand-primary/10 flex items-center"
             )}>
               {msg.role === 'assistant' ? (
-                <div className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-xl">
+                <div className={cn("prose max-w-none prose-p:leading-relaxed prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-xl", theme === 'dark' && "prose-invert")}>
                   {msg.content ? (
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                       {msg.content}
@@ -98,9 +98,9 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick }) {
 
 function MockAction({ label, onClick }) {
   return (
-    <button onClick={onClick} className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-left transition-all">
-      <span className="text-xs font-medium text-slate-300 line-clamp-1">{label}</span>
-      <ChevronRight className="h-4 w-4 text-slate-500 shrink-0" />
+    <button onClick={onClick} className="flex items-center justify-between gap-4 p-4 rounded-2xl mock-btn text-left transition-all">
+      <span className="text-xs font-medium text-text-secondary line-clamp-1">{label}</span>
+      <ChevronRight className="h-4 w-4 text-text-secondary shrink-0" />
     </button>
   );
 }

@@ -44,7 +44,7 @@ export function ConversationItem({
     <div 
       className={cn(
         "group relative flex items-center justify-between gap-3 rounded-xl p-3 cursor-pointer transition-all duration-200 overflow-hidden",
-        active ? "bg-brand-primary/10 text-brand-primary" : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+        active ? "bg-brand-primary/10 text-brand-primary" : "text-text-secondary hover:text-text-primary hover-bg-glass"
       )}
       onClick={() => {
         if (!isEditing) onClick();
@@ -60,12 +60,12 @@ export function ConversationItem({
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 bg-black/30 border border-brand-primary/50 text-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-brand-primary min-w-0 w-full"
+              className="flex-1 bg-transparent border border-brand-primary/50 text-text-primary rounded px-2 py-1 text-sm focus:outline-none min-w-0 w-full"
             />
-            <button onClick={handleRenameSubmit} className="text-emerald-400 hover:text-emerald-300 p-1 shrink-0">
+            <button onClick={handleRenameSubmit} className="text-emerald-500 hover:text-emerald-400 p-1 shrink-0">
               <Check className="h-4 w-4" />
             </button>
-            <button onClick={cancelRename} className="text-slate-400 hover:text-slate-200 p-1 shrink-0">
+            <button onClick={cancelRename} className="text-text-secondary hover:text-text-primary p-1 shrink-0">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -81,17 +81,17 @@ export function ConversationItem({
           className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center bg-black/40 backdrop-blur-xl rounded-lg shadow-sm border border-white/10 p-0.5">
+          <div className="flex items-center edit-panel backdrop-blur-xl rounded-lg shadow-sm border p-0.5">
             <button
               onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-              className="p-1.5 text-slate-300 hover:text-white transition-colors rounded-md hover:bg-white/10"
+              className="p-1.5 text-text-secondary hover:text-text-primary transition-colors rounded-md hover-bg-glass"
               title="Rename"
             >
               <Edit2 className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(chat.id, e); }}
-              className="p-1.5 text-slate-300 hover:text-red-400 transition-colors rounded-md hover:bg-red-400/20"
+              className="p-1.5 text-text-secondary hover:text-red-400 transition-colors rounded-md hover:bg-red-400/20"
               title="Delete"
             >
               <Trash2 className="h-3.5 w-3.5" />

@@ -43,7 +43,7 @@ function App() {
   useEffect(() => {
     const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setTheme(isDark ? 'dark' : 'light');
-    
+
     const themeListener = (e) => setTheme(e.matches ? 'dark' : 'light');
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeListener);
 
@@ -111,7 +111,7 @@ function App() {
   };
 
   const renameConversation = (id, newTitle) => {
-    setConversations(prev => prev.map(c => 
+    setConversations(prev => prev.map(c =>
       c.id === id ? { ...c, title: newTitle } : c
     ));
   };
@@ -142,7 +142,7 @@ function App() {
 
     let currentId = activeId;
     const conversationExists = conversations.some(c => c.id === currentId);
-    
+
     if (!currentId || !conversationExists) {
       const newChat = {
         id: Date.now().toString(),
@@ -156,45 +156,45 @@ function App() {
     }
 
     const userMessage = { id: Date.now().toString(), role: 'user', content: textToSubmit };
-    
+
     const activeConv = conversations.find(c => c.id === currentId);
     const allMessages = activeConv ? [...activeConv.messages, userMessage] : [userMessage];
     const apiMessages = allMessages.map(m => ({ role: m.role, content: m.content }));
 
-    setConversations(prev => prev.map(c => 
-      c.id === currentId 
+    setConversations(prev => prev.map(c =>
+      c.id === currentId
         ? { ...c, messages: [...c.messages, userMessage], title: c.messages.length === 0 ? (textToSubmit.slice(0, 30) + (textToSubmit.length > 30 ? "..." : "")) : c.title }
         : c
     ));
-    
+
     setPrompt("");
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/chat`, { 
+      const response = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: apiMessages })
       });
-      
+
       if (!response.ok) throw new Error("Backend unavailable");
-      
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      
+
       setIsLoading(false); // Stop "thinking" indicator once stream starts
-      
+
       // Add placeholder assistant message for streaming now that we have a response
       const assistantMessageId = (Date.now() + 1).toString();
-      const assistantMessagePlaceholder = { 
-        id: assistantMessageId, 
-        role: 'assistant', 
+      const assistantMessagePlaceholder = {
+        id: assistantMessageId,
+        role: 'assistant',
         content: '',
         isStreaming: true
       };
-      
-      setConversations(prev => prev.map(c => 
-        c.id === currentId 
+
+      setConversations(prev => prev.map(c =>
+        c.id === currentId
           ? { ...c, messages: [...c.messages, assistantMessagePlaceholder] }
           : c
       ));
@@ -205,11 +205,11 @@ function App() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop();
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
@@ -219,16 +219,16 @@ function App() {
               } else if (data.text) {
                 accumulatedContent += data.text;
                 // Update the placeholder message
-                setConversations(prev => prev.map(c => 
-                  c.id === currentId 
-                    ? { 
-                        ...c, 
-                        messages: c.messages.map(msg => 
-                          msg.id === assistantMessageId 
-                            ? { ...msg, content: accumulatedContent } 
-                            : msg
-                        )
-                      }
+                setConversations(prev => prev.map(c =>
+                  c.id === currentId
+                    ? {
+                      ...c,
+                      messages: c.messages.map(msg =>
+                        msg.id === assistantMessageId
+                          ? { ...msg, content: accumulatedContent }
+                          : msg
+                      )
+                    }
                     : c
                 ));
               }
@@ -238,32 +238,32 @@ function App() {
           }
         }
       }
-      
+
       // Finalize message
-      setConversations(prev => prev.map(c => 
-        c.id === currentId 
-          ? { 
-              ...c, 
-              messages: c.messages.map(msg => 
-                msg.id === assistantMessageId 
-                  ? { ...msg, isStreaming: false } 
-                  : msg
-              )
-            }
+      setConversations(prev => prev.map(c =>
+        c.id === currentId
+          ? {
+            ...c,
+            messages: c.messages.map(msg =>
+              msg.id === assistantMessageId
+                ? { ...msg, isStreaming: false }
+                : msg
+            )
+          }
           : c
       ));
     } catch (err) {
-      setConversations(prev => prev.map(c => 
-        c.id === currentId 
-          ? { 
-              ...c, 
-              messages: [...c.messages, { 
-                id: (Date.now() + 1).toString(), 
-                role: 'assistant', 
-                content: `Connection failed: ${err.message}`,
-                isStreaming: false
-              }]
-            }
+      setConversations(prev => prev.map(c =>
+        c.id === currentId
+          ? {
+            ...c,
+            messages: [...c.messages, {
+              id: (Date.now() + 1).toString(),
+              role: 'assistant',
+              content: `Connection failed: ${err.message}`,
+              isStreaming: false
+            }]
+          }
           : c
       ));
     } finally {
@@ -274,12 +274,12 @@ function App() {
   const isReady = status.status === 'complete';
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden text-slate-200">
-      <Sidebar 
-        isOpen={isMobileMenuOpen} 
+    <div className="flex h-[100dvh] w-full overflow-hidden text-text-primary">
+      <Sidebar
+        isOpen={isMobileMenuOpen}
         setIsOpen={setIsMobileMenuOpen}
-        isReady={isReady} 
-        theme={theme} 
+        isReady={isReady}
+        theme={theme}
         conversations={conversations}
         activeId={activeId}
         setActiveId={setActiveId}
@@ -290,11 +290,6 @@ function App() {
       />
 
       <main className="relative flex-1 flex flex-col min-w-0 h-full">
-        <Header 
-          isOpen={isMobileMenuOpen} 
-          setIsOpen={setIsMobileMenuOpen} 
-        />
-
         <div className="flex-1 min-h-0 overflow-y-auto p-8 relative">
           <AnimatePresence mode="wait">
             {!isReady ? (
@@ -302,7 +297,7 @@ function App() {
             ) : activeTab === 'logs' ? (
               <LogView systemLogs={systemLogs} />
             ) : (
-              <ChatView messages={messages} isLoading={isLoading} chatEndRef={chatEndRef} onActionClick={sendChat} />
+              <ChatView messages={messages} isLoading={isLoading} chatEndRef={chatEndRef} onActionClick={sendChat} theme={theme} />
             )}
           </AnimatePresence>
         </div>
@@ -310,7 +305,7 @@ function App() {
         {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
           {isMobileMenuOpen && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -321,11 +316,11 @@ function App() {
         </AnimatePresence>
 
         {isReady && (
-          <ChatInput 
-            prompt={prompt} 
-            setPrompt={setPrompt} 
-            sendChat={sendChat} 
-            isLoading={isLoading} 
+          <ChatInput
+            prompt={prompt}
+            setPrompt={setPrompt}
+            sendChat={sendChat}
+            isLoading={isLoading}
           />
         )}
       </main>
@@ -335,13 +330,13 @@ function App() {
 
 function LogView({ systemLogs }) {
   const logEndRef = useRef(null);
-  
+
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [systemLogs]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="max-w-4xl mx-auto h-[calc(100vh-250px)] flex flex-col"
@@ -350,16 +345,16 @@ function LogView({ systemLogs }) {
         <div className="h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
         </div>
-        <h2 className="text-xl font-bold text-white">System Diagnostics</h2>
+        <h2 className="text-xl font-bold text-text-primary">System Diagnostics</h2>
       </div>
-      
+
       <div className="flex-1 glass rounded-2xl p-6 font-mono text-xs overflow-y-auto space-y-2 border border-white/5 shadow-2xl">
         {systemLogs.length === 0 ? (
           <div className="text-slate-500 italic">Awaiting telemetry data...</div>
         ) : (
           systemLogs.map((log, i) => (
             <div key={i} className="flex gap-4 group">
-              <span className="text-slate-600 shrink-0 select-none">[{i+1}]</span>
+              <span className="text-slate-600 shrink-0 select-none">[{i + 1}]</span>
               <span className="text-slate-300 group-hover:text-brand-primary transition-colors">{log}</span>
             </div>
           ))
