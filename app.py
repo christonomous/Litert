@@ -160,9 +160,36 @@ def fetch_website(url):
         text = soup.get_text(separator=' ')
         import re
         text = re.sub(r'\s+', ' ', text)
-        return text.strip()[:8000]
+        return text.strip()[:3500]
     except Exception as e:
         return f"Error fetching website: {e}"
+
+def prune_context(context, max_chars=9000):
+    if len(context) < max_chars:
+        return context
+    
+    # Very simple pruning: keep headers and the most recent visits
+    # Split by the section markers we use
+    sections = context.split("\n\n")
+    if len(sections) < 2:
+        return context[-max_chars:] # Fallback
+    
+    # Priority: Keep the 2 most recent sections entirely
+    # and truncate the earlier ones to just their headers/first bits
+    pruned = []
+    # Keep headers for context, but drop the heavy content of old visits
+    for i, section in enumerate(sections[:-2]):
+        lines = section.split('\n')
+        if lines:
+            pruned.append(lines[0] + " ... (truncated for space)")
+    
+    # Add the most recent 2 sections in full
+    pruned.extend(sections[-2:])
+    
+    new_context = "\n\n".join(pruned)
+    if len(new_context) > max_chars:
+        return new_context[-max_chars:]
+    return new_context
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
@@ -190,7 +217,7 @@ async def chat(request: ChatRequest):
                 if not last_user_msg:
                     break
                     
-                agent_prompt = f"<start_of_turn>user\nYou are the Action Coordinator. Your goal: '{last_user_msg.content}'\n\nReview the Collected Data. \n- If the user wants a summary of a specific item or news story, and you only have a list of links or titles, you are NOT DONE. You MUST VISIT the specific URL for that story now.\n- If you need to verify a fact, SEARCH for it.\n- ONLY if you have the full, detailed content of requested stories ready to summarize, reply 'DONE'.\n\nOutput only: 'SEARCH: <query>', 'VISIT: <url>', or 'DONE'.\n\nCollected Data:\n{agent_context}<end_of_turn>\n<start_of_turn>model\n"
+                agent_prompt = f"<start_of_turn>user\nYou are the Action Coordinator. Your goal: '{last_user_msg.content}'\n\n[INSTRUCTIONS]\n1. Review the Collected Data for Markdown links: `[Title](URL)`.\n2. If you see a link that likely contains the answer (e.g., a specific news story link within a main page), you MUST use `VISIT: <url>` on it immediately.\n3. DO NOT search if the link you need is already in the data.\n4. ONLY if you have the full, detailed content required to answer the user request, reply 'DONE'.\n\nOutput ONLY: 'SEARCH: <query>', 'VISIT: <url>', or 'DONE'.\n\n[COLLECTED DATA]\n{agent_context}<end_of_turn>\n<start_of_turn>model\n"
                 
                 action = ""
                 with engine.create_conversation() as conv:
@@ -215,14 +242,14 @@ async def chat(request: ChatRequest):
                     try:
                         from ddgs import DDGS
                         with DDGS() as ddgs:
-                            results = list(ddgs.text(query, max_results=5))
+                            results = list(ddgs.text(query, max_results=3))
                             search_res = f"Search Results for '{query}':\n"
                             if results:
-                                for idx, res in enumerate(results):
-                                    search_res += f"Source {idx+1}: [{res.get('title')}]({res.get('href')}) - {res.get('body')}\n"
+                                for res in results:
+                                    search_res += f"- [{res.get('title')}]({res.get('href')}): {res.get('body')}\n"
                             else:
                                 search_res += "No results found.\n"
-                            agent_context += search_res + "\n"
+                            agent_context = prune_context(agent_context + search_res + "\n")
                     except Exception as e:
                         agent_context += f"Search error: {e}\n"
                 
@@ -234,7 +261,7 @@ async def chat(request: ChatRequest):
                     yield f"data: {msg_data}\n\n"
                     
                     website_content = fetch_website(url)
-                    agent_context += f"Website Content for '{url}':\n{website_content}\n\n"
+                    agent_context = prune_context(agent_context + f"Website Content for '{url}':\n{website_content}\n\n")
                 
                 action_count += 1
 
@@ -249,6 +276,9 @@ async def chat(request: ChatRequest):
                 
             if agent_context:
                 system_prompt_content += "\n[COLLECTED RESEARCH DATA]\n" + agent_context
+
+            # Signal transition to final answer generation
+            yield f"data: {json.dumps({'status': 'SUMMARIZING'})}\n\n"
 
             formatted_prompt = ""
             for i, msg in enumerate(request.messages):

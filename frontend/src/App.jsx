@@ -167,8 +167,8 @@ function App() {
         : c
     ));
 
-    setPrompt("");
     setIsLoading("THINKING");
+    setPrompt("");
 
     try {
       const response = await fetch(`${API_BASE}/chat`, {
@@ -182,25 +182,10 @@ function App() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
-      setIsLoading(false); // Stop "thinking" indicator once stream starts
-
-      // Add placeholder assistant message for streaming now that we have a response
-      const assistantMessageId = (Date.now() + 1).toString();
-      const assistantMessagePlaceholder = {
-        id: assistantMessageId,
-        role: 'assistant',
-        content: '',
-        isStreaming: true
-      };
-
-      setConversations(prev => prev.map(c =>
-        c.id === currentId
-          ? { ...c, messages: [...c.messages, assistantMessagePlaceholder] }
-          : c
-      ));
-
       let accumulatedContent = "";
       let buffer = "";
+      let hasStartedStreamingText = false;
+      const assistantMessageId = (Date.now() + 1).toString();
 
       while (true) {
         const { done, value } = await reader.read();
@@ -216,21 +201,44 @@ function App() {
               const data = JSON.parse(line.slice(6));
               if (data.error) {
                 accumulatedContent += `Error: ${data.error}`;
+                setIsLoading(false);
+              } else if (data.status) {
+                setIsLoading(data.status);
               } else if (data.text) {
-                accumulatedContent += data.text;
-                // Update the placeholder message
-                setConversations(prev => prev.map(c =>
-                  c.id === currentId
-                    ? {
-                      ...c,
-                      messages: c.messages.map(msg =>
-                        msg.id === assistantMessageId
-                          ? { ...msg, content: accumulatedContent }
-                          : msg
-                      )
-                    }
-                    : c
-                ));
+                // Only start the bubble and hide the status dot once we have real content
+                if (!hasStartedStreamingText && data.text.trim()) {
+                  hasStartedStreamingText = true;
+                  setIsLoading(false);
+                  
+                  const assistantMessagePlaceholder = {
+                    id: assistantMessageId,
+                    role: 'assistant',
+                    content: '',
+                    isStreaming: true
+                  };
+                  
+                  setConversations(prev => prev.map(c =>
+                    c.id === currentId
+                      ? { ...c, messages: [...c.messages, assistantMessagePlaceholder] }
+                      : c
+                  ));
+                }
+                
+                if (hasStartedStreamingText) {
+                  accumulatedContent += data.text;
+                  setConversations(prev => prev.map(c =>
+                    c.id === currentId
+                      ? {
+                        ...c,
+                        messages: c.messages.map(msg =>
+                          msg.id === assistantMessageId
+                            ? { ...msg, content: accumulatedContent }
+                            : msg
+                        )
+                      }
+                      : c
+                  ));
+                }
               }
             } catch (e) {
               console.warn("Error parsing stream chunk", e);
