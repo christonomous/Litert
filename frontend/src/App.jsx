@@ -290,7 +290,7 @@ function App() {
       />
 
       <main className="relative flex-1 flex flex-col min-w-0 h-full">
-        <div className="flex-1 min-h-0 overflow-y-auto p-8 relative">
+        <div className="flex-1 min-h-0 overflow-y-auto px-0 py-4 sm:p-6 lg:p-8 relative">
           <AnimatePresence mode="wait">
             {!isReady ? (
               <SetupView status={status} triggerDownload={triggerDownload} />

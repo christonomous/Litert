@@ -36,8 +36,10 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick, theme
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className={cn(
-              "flex gap-6 p-1",
-              msg.role === 'assistant' ? "items-start" : "items-start flex-row-reverse"
+              "flex p-1 gap-3 lg:gap-6",
+              msg.role === 'assistant' 
+                ? "flex-col lg:flex-row items-start" 
+                : "flex-col lg:flex-row-reverse items-end lg:items-start"
             )}
           >
             <div className={cn(
@@ -47,7 +49,7 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick, theme
               {msg.role === 'assistant' ? <Bot className="h-6 w-6" /> : <User className="h-6 w-6" />}
             </div>
             <div className={cn(
-              "max-w-[90%] lg:max-w-[80%] px-4 lg:px-6 py-3 lg:py-4 rounded-3xl text-sm leading-relaxed min-h-[52px]",
+              "max-w-full lg:max-w-[80%] px-4 lg:px-6 py-3 lg:py-4 rounded-3xl text-sm leading-relaxed min-h-[52px]",
               msg.role === 'assistant'
                 ? "glass text-text-primary"
                 : "bg-brand-primary text-white shadow-xl shadow-brand-primary/10 flex items-center"
@@ -76,7 +78,7 @@ export function ChatView({ messages, isLoading, chatEndRef, onActionClick, theme
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex gap-6 p-1 items-start"
+          className="flex p-1 flex-col lg:flex-row items-start gap-3 lg:gap-6"
         >
           <div className="h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center bg-brand-primary/20 border border-brand-primary/30">
             <Bot className="h-6 w-6 text-brand-primary animate-pulse" />
