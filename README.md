@@ -76,7 +76,7 @@ chmod +x run.sh
 ```
 
 **What this script does:**
-1.  **System Audit**: Checks for `python3`, `node`, `npm`, and `curl`.
+1.  **System Audit**: Checks for `python3`, `node`, `npm`, `git`, and `curl`.
 2.  **Auto-Install**: Installs missing dependencies (via `apt` or `brew`).
 3.  **Environment Setup**: Creates a Python Virtual Environment (`.venv`) and installs Node modules.
 4.  **Zero-Orchestration**: Automatically launches the FastAPI backend and the Vite development server simultaneously.
