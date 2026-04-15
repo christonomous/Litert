@@ -128,7 +128,7 @@ The agent's personality and rules are defined in `system_prompt.md`. You can cus
 ---
 
 <p align="center">
-  🚀 <i>Building the future of Smart Sovereignty.</i><br/><br/>
+  🚀 <i>Prepare for the new Economy.</i><br/><br/>
   <a href="https://www.linkedin.com/in/christonomous/">
     <img src="https://img.shields.io/badge/Follow_on_LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/>
   </a><br/>
