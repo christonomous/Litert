@@ -132,5 +132,5 @@ The agent's personality and rules are defined in `system_prompt.md`. You can cus
   <a href="https://www.linkedin.com/in/christonomous/">
     <img src="https://img.shields.io/badge/Follow_on_LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/>
   </a><br/>
-  <b>Follow to get insights on AI, Local LLMs, and Sovereign Systems.</b>
+  <b>Follow to get insights on AI and Crypto.</b>
 </p>
