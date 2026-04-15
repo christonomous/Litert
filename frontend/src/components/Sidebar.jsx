@@ -1,10 +1,10 @@
-import { 
-  Cpu, 
-  MessageSquare, 
+import {
+  Cpu,
+  MessageSquare,
   Plus,
-  CheckCircle2, 
-  Download, 
-  Sun, 
+  CheckCircle2,
+  Download,
+  Sun,
   Moon,
   X,
   History
@@ -13,11 +13,11 @@ import { SidebarItem } from './ui/SidebarItem';
 import { ConversationItem } from './ConversationItem';
 import { cn } from '../utils/cn';
 
-export function Sidebar({ 
-  isOpen, 
+export function Sidebar({
+  isOpen,
   setIsOpen,
-  isReady, 
-  theme, 
+  isReady,
+  theme,
   conversations,
   activeId,
   setActiveId,
@@ -27,7 +27,7 @@ export function Sidebar({
   setTheme
 }) {
   return (
-    <aside 
+    <aside
       className={cn(
         "glass z-50 flex flex-col border-r border-white/5 transition-all duration-500 ease-in-out",
         "fixed inset-y-0 left-0 w-80 lg:relative lg:translate-x-0 lg:flex",
@@ -40,11 +40,11 @@ export function Sidebar({
             <Cpu className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-text-primary">
-            NujinLocal <span className="text-brand-primary">AI</span>
+            Litert <span className="text-brand-primary">AI</span>
           </h1>
         </div>
-        
-        <button 
+
+        <button
           onClick={() => setIsOpen(false)}
           className="lg:hidden p-2 rounded-lg hover:bg-white/5 text-slate-400"
         >
@@ -53,7 +53,7 @@ export function Sidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
-        <button 
+        <button
           onClick={createNewConversation}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl sidebar-btn text-text-primary transition-all group mb-8"
         >
@@ -68,7 +68,7 @@ export function Sidebar({
             <History className="h-3 w-3" />
             Recent History
           </div>
-          
+
           <div className="space-y-1">
             {conversations.length === 0 ? (
               <div className="px-4 py-8 text-center bg-white/[0.02] rounded-2xl border border-dashed border-white/5">
@@ -76,10 +76,10 @@ export function Sidebar({
               </div>
             ) : (
               conversations.map((chat) => (
-                <ConversationItem 
+                <ConversationItem
                   key={chat.id}
-                  chat={chat} 
-                  active={activeId === chat.id} 
+                  chat={chat}
+                  active={activeId === chat.id}
                   onClick={() => {
                     setActiveId(chat.id);
                     setIsOpen(false);
@@ -117,7 +117,7 @@ export function Sidebar({
           )}
         </div>
 
-        <button 
+        <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="flex w-full items-center gap-3 rounded-xl p-3 hover:bg-white/5 transition-colors"
         >

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Project NujinLocal Runner
+# Project Litert Runner
 
 # --- OS Detection ---
 OS_TYPE="unknown"

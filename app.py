@@ -30,7 +30,7 @@ log_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(), log_handler])
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="NujinLocal Backend")
+app = FastAPI(title="Litert Backend")
 
 # Enable CORS for frontend development
 app.add_middleware(
@@ -211,12 +211,30 @@ async def chat(request: ChatRequest):
         try:
             agent_context = ""
             action_count = 0
+            is_direct_answer = False
             
             while action_count < 5:
                 last_user_msg = next((m for m in reversed(request.messages) if m.role == "user"), None)
                 if not last_user_msg:
                     break
+
+                # --- Step A: Reasoning/Routing (Only on the first iteration) ---
+                if action_count == 0:
+                    yield f"data: {json.dumps({'status': 'REASONING'})}\n\n"
+                    intent_prompt = f"<start_of_turn>user\nAnalyze the User Goal: '{last_user_msg.content}'\n\nTask: Determine if this request requires fresh data from the internet (news, current events, live data) or if it can be answered directly (greetings, simple coding, generic knowledge).\n\nRules:\n1. If it's a greeting, small talk, or a general request you can answer without tools, output: 'DIRECT_ANSWER'.\n2. If it requires searching the web for facts or recent info, output: 'SEARCH_REQUIRED'.\n\nOutput only the choice.<end_of_turn>\n<start_of_turn>model\n"
                     
+                    intent_res = ""
+                    with engine.create_conversation() as conv:
+                        for chunk in conv.send_message_async(intent_prompt):
+                            if 'content' in chunk and chunk['content']:
+                                intent_res += chunk['content'][0].get('text', '')
+                    
+                    logger.info(f"Intent Classification: {intent_res.strip()}")
+                    if "DIRECT_ANSWER" in intent_res.upper():
+                        logger.info("Bypassing research loop for direct answer.")
+                        is_direct_answer = True
+                        break # Skip to final answer generation
+
                 agent_prompt = f"<start_of_turn>user\nYou are the Action Coordinator. Your goal: '{last_user_msg.content}'\n\n[INSTRUCTIONS]\n1. Review the Collected Data for Markdown links: `[Title](URL)`.\n2. If you see a link that likely contains the answer (e.g., a specific news story link within a main page), you MUST use `VISIT: <url>` on it immediately.\n3. DO NOT search if the link you need is already in the data.\n4. ONLY if you have the full, detailed content required to answer the user request, reply 'DONE'.\n\nOutput ONLY: 'SEARCH: <query>', 'VISIT: <url>', or 'DONE'.\n\n[COLLECTED DATA]\n{agent_context}<end_of_turn>\n<start_of_turn>model\n"
                 
                 action = ""
@@ -235,8 +253,7 @@ async def chat(request: ChatRequest):
                 if "SEARCH:" in action:
                     query = action.split("SEARCH:")[1].split('\n')[0].strip()
                     logger.info(f"Agent Action Loop: SEARCH -> {query}")
-                    import json
-                    msg_data = json.dumps({'status': f'SEARCH [{query}]'})
+                    msg_data = json.dumps({'status': f'SEARCHING [{query}]'})
                     yield f"data: {msg_data}\n\n"
                     
                     try:
@@ -256,8 +273,7 @@ async def chat(request: ChatRequest):
                 elif "VISIT:" in action:
                     url = action.split("VISIT:")[1].split('\n')[0].strip()
                     logger.info(f"Agent Action Loop: VISIT -> {url}")
-                    import json
-                    msg_data = json.dumps({'status': f'VISIT [{url}]'})
+                    msg_data = json.dumps({'status': f'VISITING [{url}]'})
                     yield f"data: {msg_data}\n\n"
                     
                     website_content = fetch_website(url)
@@ -265,44 +281,85 @@ async def chat(request: ChatRequest):
                 
                 action_count += 1
 
-            system_prompt_content = "[SYSTEM: ReAct Agent Enabled]\n"
-            import os
-            try:
-                if os.path.exists("system_prompt.md"):
-                    with open("system_prompt.md", "r") as f:
-                        system_prompt_content = f.read().strip() + "\n"
-            except Exception as e:
-                pass
+            if is_direct_answer:
+                system_prompt_content = "You are Litert, a helpful and conversational local AI agent. Provide a direct response to the user's request."
+            else:
+                system_prompt_content = "[SYSTEM: ReAct Agent Enabled]\n"
+                try:
+                    if os.path.exists("system_prompt.md"):
+                        with open("system_prompt.md", "r") as f:
+                            system_prompt_content = f.read().strip() + "\n"
+                except Exception as e:
+                    pass
                 
-            if agent_context:
-                system_prompt_content += "\n[COLLECTED RESEARCH DATA]\n" + agent_context
+                if agent_context:
+                    system_prompt_content += "\n[COLLECTED RESEARCH DATA]\n" + agent_context
 
             # Signal transition to final answer generation
             yield f"data: {json.dumps({'status': 'SUMMARIZING'})}\n\n"
 
-            formatted_prompt = ""
-            for i, msg in enumerate(request.messages):
-                role = "user" if msg.role == "user" else "model"
-                content = msg.content
-                if msg.role == "user" and i == len(request.messages) - 1:
-                    content = f"{system_prompt_content}\n\nUSER REQUEST: {content}"
-                formatted_prompt += f"<start_of_turn>{role}\n{content}<end_of_turn>\n"
-            
-            if not formatted_prompt.endswith("<start_of_turn>model\n"):
-                formatted_prompt += "<start_of_turn>model\n"
+            if is_direct_answer:
+                # Use a very clean, simple prompt for conversational tasks
+                formatted_prompt = f"<start_of_turn>user\n{system_prompt_content}\n\nClient: {last_user_msg.content}<end_of_turn>\n<start_of_turn>model\n"
+            else:
+                formatted_prompt = ""
+                for i, msg in enumerate(request.messages):
+                    role = "user" if msg.role == "user" else "model"
+                    content = msg.content
+                    if msg.role == "user" and i == len(request.messages) - 1:
+                        content = f"{system_prompt_content}\n\nUSER REQUEST: {content}"
+                    formatted_prompt += f"<start_of_turn>{role}\n{content}<end_of_turn>\n"
+                
+                if not formatted_prompt.endswith("<start_of_turn>model\n"):
+                    formatted_prompt += "<start_of_turn>model\n"
 
-            with engine.create_conversation() as conv:
-                logger.info("Starting inference with conversation history")
-                import json
-                for chunk in conv.send_message_async(formatted_prompt):
-                    if 'content' in chunk and len(chunk['content']) > 0:
-                        text = chunk['content'][0].get('text', '')
-                        if text:
-                            yield f"data: {json.dumps({'text': text})}\n\n"
+            with engine.create_session(apply_prompt_template=False) as session:
+                logger.info("Starting final inference with raw session")
+                session.run_prefill([formatted_prompt])
+                first_chunk = True
+                yield_buffer = ""
+                stop_tags = ["<end_of_turn>", "<|endoftext|>", "<turn|>"]
+                for chunk in session.run_decode_async():
+                    if chunk.texts:
+                        text = chunk.texts[0]
+                        # Workaround for redundant Header token in some Gemma implementations
+                        if first_chunk and text.strip().lower() == "model":
+                            first_chunk = False
+                            continue
+                        first_chunk = False
+                        
+                        yield_buffer += text
+                        
+                        # Check for full stop tags
+                        stop_found = False
+                        for tag in stop_tags:
+                            if tag in yield_buffer:
+                                prefix = yield_buffer.split(tag)[0]
+                                if prefix:
+                                    yield f"data: {json.dumps({'text': prefix})}\n\n"
+                                stop_found = True
+                                break
+                        
+                        if stop_found:
+                            break
+                        
+                        # If buffer contains potential tag start, yield only safe part
+                        if "<" in yield_buffer:
+                            idx = yield_buffer.find("<")
+                            if idx > 0:
+                                yield f"data: {json.dumps({'text': yield_buffer[:idx]})}\n\n"
+                                yield_buffer = yield_buffer[idx:]
+                        else:
+                            if yield_buffer:
+                                yield f"data: {json.dumps({'text': yield_buffer})}\n\n"
+                                yield_buffer = ""
+
+                # Yield anything left if it's not a tag
+                if yield_buffer and not any(tag in yield_buffer for tag in stop_tags):
+                    yield f"data: {json.dumps({'text': yield_buffer})}\n\n"
                 logger.info("Inference complete.")
         except Exception as e:
             logger.error(f"Inference error: {e}")
-            import json
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")

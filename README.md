@@ -1,4 +1,4 @@
-# 🌌 NujinLocal: Local Autonomous Web-Intelligence
+# 🌌 Litert: Local Autonomous Web-Intelligence
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
@@ -6,17 +6,14 @@
 [![Tailwind 4](https://img.shields.io/badge/Styling-Tailwind_4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**NujinLocal** is an autonomous AI agent designed to bring high-performance web-intelligence to any **standard office laptop or PC**. It empowers users with smart tools to search, visit, and synthesize real-time web data locally and privately. Powered by **Nujinai**, it is built on Google's **LiteRT** (formerly TFLite) for edge-optimized execution of the **Gemma 4 E2B-it** model. Part of the [Nujin.ai](https://nujin.ai) ecosystem.
-
-> [!IMPORTANT]
-> This project is an essential component for a larger initiative: building an **AI OS for Smart Sovereignty**. As a **NujinLocal** instance, it serves as the core real-time intelligence layer, ensuring privacy and local execution at every level.
+**Litert** is an Local AI Agent designed to bring high-performance web-intelligence to any **standard office laptop or PC**. It empowers users with smart tools to search, visit, and synthesize real-time web data locally and privately. It is built on Google's **LiteRT** (formerly TFLite) for edge-optimized execution of the **Gemma 4 E2B-it** model.
 
 ---
 
 ## ✨ Core Features
 
-### 🕵️‍♂️ Nujinai: The ReAct Intelligence
-Nujinai isn't just a chatbot; it's a **ReAct (Reason + Act)** autonomous agent.
+### 🕵️‍♂️ Litert: The ReAct Intelligence
+Litert isn't just a chatbot; it's a **ReAct (Reason + Act)** autonomous agent.
 - **Autonomous Search**: Uses DuckDuckGo to find information in real-time.
 - **Deep Exploration**: Proactively visits URLs, scrapes content with BeautifulSoup, and synthesizes it into grounded answers.
 - **Massive Context**: Leveraging Gemma-4's native support for up to 128K tokens (managed by intelligent pruning for localized speed).
@@ -41,7 +38,7 @@ graph TD
     User([User]) <--> Frontend[React 19 + Tailwind 4 UI]
     Frontend <--> API[FastAPI Backend]
     
-    subgraph "Nujinai Agent Core"
+    subgraph "Litert Agent Core"
         API <--> Agent[ReAct Logic]
         Agent <--> Engine[LiteRT: Gemma 4 E2B-it]
         Agent <--> Search[DuckDuckGo Tool]
@@ -63,15 +60,15 @@ Clone the repository or download the source as a ZIP file:
 
 **Option A: Git Clone (Recommended)**
 ```bash
-git clone https://github.com/christonomous/NujinLocal.git
-cd NujinLocal
+git clone https://github.com/christonomous/Litert.git
+cd Litert
 ```
 
 **Option B: Download ZIP**
-Click here to [Download ZIP](https://github.com/christonomous/NujinLocal/archive/refs/heads/main.zip)
+Click here to [Download ZIP](https://github.com/christonomous/Litert/archive/refs/heads/main.zip)
 
 ### 2. The "One-Command" Setup
-NujinLocal is designed for zero friction. On Linux (Ubuntu) or macOS, simply run:
+Litert is designed for zero friction. On Linux (Ubuntu) or macOS, simply run:
 
 ```bash
 chmod +x run.sh
@@ -109,7 +106,7 @@ chmod +x run.sh
 
 ## ⚙️ Configuration
 
-The agent's personality and rules are defined in `system_prompt.md`. You can customize how **Nujinai** behaves by editing this file—the backend will reload it on the next chat request.
+The agent's personality and rules are defined in `system_prompt.md`. You can customize how **Litert** behaves by editing this file—the backend will reload it on the next chat request.
 
 ```markdown
 # Edit system_prompt.md to change:
