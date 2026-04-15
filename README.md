@@ -128,13 +128,6 @@ The agent's personality and rules are defined in `system_prompt.md`. You can cus
 ---
 
 <p align="center">
-  Built with ❤️ by the [Nujin Team](https://nujin.ai)
-</p>
-
----
-
-<p align="center">
-  <b>Founder & Developer: [Christonomous](https://chris.revoro.consulting)</b><br/>
   🚀 <i>Building the future of Smart Sovereignty.</i><br/><br/>
   <a href="https://www.linkedin.com/in/christonomous/">
     <img src="https://img.shields.io/badge/Follow_on_LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/>
