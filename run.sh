@@ -39,6 +39,12 @@ if ! has_cmd node || ! has_cmd npm; then
     MISSING_MAC+=("node")
 fi
 
+# Git Check
+if ! has_cmd git; then
+    MISSING_LINUX+=("git")
+    MISSING_MAC+=("git")
+fi
+
 # Curl Check (required for both)
 if ! has_cmd curl; then
     MISSING_LINUX+=("curl")
@@ -98,11 +104,34 @@ fi
 
 echo "✅ All system dependencies verified."
 
+# --- Auto-Update Section ---
+UPDATED=false
+if [ -d ".git" ] && has_cmd git; then
+    echo "🔄 Checking for updates..."
+    git fetch origin --quiet
+    
+    LOCAL_HASH=$(git rev-parse HEAD)
+    REMOTE_HASH=$(git rev-parse @{u} 2>/dev/null)
+    
+    if [ "$LOCAL_HASH" != "$REMOTE_HASH" ] && [ ! -z "$REMOTE_HASH" ]; then
+        echo "🚀 New version detected! Updating..."
+        git pull origin $(git rev-parse --abbrev-ref HEAD) --quiet
+        UPDATED=true
+        echo "✅ Updated to latest version."
+    else
+        echo "✨ Already up to date."
+    fi
+fi
+
 # 1. Setup Backend
 echo "🚀 Starting Backend Setup..."
 if [ ! -d ".venv" ]; then
     python3 -m venv .venv
     source .venv/bin/activate
+    pip install fastapi uvicorn requests litert-lm python-multipart
+elif [ "$UPDATED" = true ]; then
+    source .venv/bin/activate
+    echo "📦 Re-installing backend dependencies after update..."
     pip install fastapi uvicorn requests litert-lm python-multipart
 else
     source .venv/bin/activate
@@ -111,7 +140,10 @@ fi
 # 2. Setup Frontend
 echo "📦 Checking Frontend Dependencies..."
 cd frontend
-if [ ! -d "node_modules" ]; then
+if [ ! -d "node_modules" ] || [ "$UPDATED" = true ]; then
+    if [ "$UPDATED" = true ]; then
+        echo "📦 Re-installing frontend dependencies after update..."
+    fi
     npm install
 fi
 cd ..
