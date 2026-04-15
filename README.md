@@ -1,4 +1,4 @@
-# 🌌 Litert: Local Autonomous Web-Intelligence
+# 🌌 Litert: Local Web-Intelligence
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/Frontend-React_19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
